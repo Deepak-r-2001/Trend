@@ -2,44 +2,40 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'your-dockerhub-username/trend'
-        CLUSTER_NAME = 'brain-tasks-cluster'
-        REGION = 'ap-south-1'
+        DOCKER_IMAGE = "deepak-r-2001/trend-app" 
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Clone') {
             steps {
-                git 'https://github.com/Vennilavan12/Trend.git'
+                git url: 'https://github.com/Deepak-r-2001/Trend.git'  
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    sh '''
-                      echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                      docker push $IMAGE_NAME
-                    '''
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Docker Push') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-eks-creds']]) {
-                    sh '''
-                      aws eks update-kubeconfig --region $REGION --name $CLUSTER_NAME
-                      kubectl apply -f deployment.yaml
-                      kubectl apply -f service.yaml
-                    '''
-                }
+                sh 'docker push $DOCKER_IMAGE'
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                sh 'kubectl apply -f deployment.yaml'
+                sh 'kubectl apply -f service.yaml'
             }
         }
     }
