@@ -1,0 +1,11 @@
+# Ignore Terraform internals and sensitive files
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.exe
+*.log
+*.zip
+*.pem
+downloads
+downloads.pub
+id_rsa*
