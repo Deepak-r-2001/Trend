@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "deepak-r-2001/trend-app" 
+        DOCKER_IMAGE = "deepwhoo/trend-app"   // ✅ updated from deepak-r-2001
     }
 
     stages {
         stage('Clone') {
             steps {
-                git url: 'https://github.com/Deepak-r-2001/Trend.git', branch: 'main' 
+                git url: 'https://github.com/Deepak-r-2001/Trend.git', branch: 'main'
             }
         }
 
