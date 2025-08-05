@@ -2,7 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "deepwhoo/trend-app"   // ✅ updated from deepak-r-2001
+        DOCKER_IMAGE = "deepwhoo/trend-app"
+        AWS_REGION = "ap-south-1"                                // 🔧 Region of your EKS cluster
+        CLUSTER_NAME = "brain-tasks-cluster"                     // 🔧 Name of your EKS cluster
     }
 
     stages {
@@ -34,9 +36,18 @@ pipeline {
 
         stage('Deploy to EKS') {
             steps {
-                sh 'kubectl apply -f deployment.yaml'
-                sh 'kubectl apply -f service.yaml'
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds'                // 🔧 Add AWS credentials to Jenkins with this ID
+                ]]) {
+                    sh '''
+                        aws eks --region $AWS_REGION update-kubeconfig --name $CLUSTER_NAME
+                        kubectl apply -f deployment.yaml
+                        kubectl apply -f service.yaml
+                    '''
+                }
             }
         }
     }
 }
+
